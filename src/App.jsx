@@ -77,7 +77,7 @@ function App() {
           <Route path='/' element={<Home user={user} />}></Route>
           <Route path='/auth' element={<Auth gun={gun} user={user} sessionStorage={sessionStorage} />}></Route>
           <Route path='/feed' element={<Feed gun={gun} user={user} sessionStorage={sessionStorage} />}></Route>
-          <Route path='/upload' element={<Upload gun={gun} user={user} sessionStorage={sessionStorage} />}></Route >
+          <Route path='/upload' element={<Upload gun={gun} user={user} sessionStorage={sessionStorage} SEA={Gun.SEA}/>}></Route >
           {userPairs &&
             (<Route path='/profile' element={<Profile gun={gun} user={user} pair={userPairs}></Profile>}></Route>)}
           {/* catch any unknown routes and route them back to the auth page */}
