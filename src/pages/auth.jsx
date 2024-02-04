@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { encrypt } from '../lib/crypt';
+import config from '../config';
 
 const Auth = ({ gun, user, sessionStorage }) => {
     const navigate = useNavigate();
@@ -81,8 +82,15 @@ const Auth = ({ gun, user, sessionStorage }) => {
         });
         // the sign up function
         if (isSignUp) {
-            //first check if the email is valid allowing for gmail and nits mails
-            if (!email.includes('@gmail.com') && !email.includes('nits.ac.in')) {
+            // invalid email detection
+            let allowed;
+            for (let i = 0; i < config.allowedEmailDomains.length; i++) {
+                if (email.includes(config.allowedEmailDomains[i])) {
+                    allowed = true;
+                    break;
+                }
+            }
+            if (!allowed) {
                 return setNotfication({
                     message: `Entered email is invalid`,
                     type: 'Error'

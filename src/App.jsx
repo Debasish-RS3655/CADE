@@ -9,15 +9,16 @@ import { useEffect, useState } from 'react';
 import './App.css';
 import Auth from './pages/auth';
 import Feed from './pages/feed';
-import Upload from './pages/upload';
+import Create from './pages/create';
 import Home from './pages/home';
 import Profile from './pages/profile';
 import Logout from './components/logout';
 import Header from './components/Header';
+import config from './config';
 
 function App() {
   const [gun] = useState(Gun({
-    peers: ['http://localhost:1234/gun']
+    peers: [config.defaultPeer]
   }));
 
   // user instance from the gun
@@ -77,7 +78,7 @@ function App() {
           <Route path='/' element={<Home user={user} />}></Route>
           <Route path='/auth' element={<Auth gun={gun} user={user} sessionStorage={sessionStorage} />}></Route>
           <Route path='/feed' element={<Feed gun={gun} user={user} sessionStorage={sessionStorage} />}></Route>
-          <Route path='/upload' element={<Upload gun={gun} user={user} sessionStorage={sessionStorage} SEA={Gun.SEA}/>}></Route >
+          <Route path='/create' element={<Create gun={gun} user={user} sessionStorage={sessionStorage} SEA={Gun.SEA}/>}></Route >
           {userPairs &&
             (<Route path='/profile' element={<Profile gun={gun} user={user} pair={userPairs}></Profile>}></Route>)}
           {/* catch any unknown routes and route them back to the auth page */}

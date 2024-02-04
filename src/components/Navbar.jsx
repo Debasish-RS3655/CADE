@@ -5,7 +5,7 @@ export default function Navbar() {
     return (
         <>
             <Link to="/feed" style={{ marginRight: '40px' }}>Feed</Link>
-            <Link to="/upload" style={{ marginRight: '40px' }}>Upload</Link>
+            <Link to="/create" style={{ marginRight: '40px' }}>Create</Link>
             <Link to="/profile">Profile</Link>
         </>)
 }
