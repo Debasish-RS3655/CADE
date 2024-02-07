@@ -2,13 +2,14 @@ import React, { useEffect, useState } from 'react';
 import Navbar from '../components/Navbar';
 import { useNavigate } from 'react-router-dom';
 import config from '../config';
-import worker from '../workers/chunk.worker';
+import cWorker from '../workers/chunk.worker';
+import hWorker from '../workers/hash.worker';
 import WebWorker from '../workers/WebWorker';
 
 // for the react native app we use the createHash function of the crypto module
 // for the frontend we use the web crypto api
 // import { createHash } from 'crypto';
-export default function Create({ gun, user, sessionStorage }) {
+export default function Create({ gun, user, sessionStorage, SEA }) {
     // return back to the home page if not signed in
     const navigate = useNavigate();
     useEffect(() => {
@@ -17,27 +18,28 @@ export default function Create({ gun, user, sessionStorage }) {
             navigate('/auth');
         }
     });
-
     // initialize and store the chunk worker inside a state hook
     const [chunkWorker, setChunkWorker] = useState(null);
-    const [imgChunks, setChunks] = useState(null);
+    const [hashWorker, setHashWorker] = useState(null);
+    const [imgChunks, setChunks] = useState([]);
+    const [chunkKeys, setChunkKeys] = useState([]);
 
     // initialize the web worker at the initial rendering of the page
     useEffect(() => {
-        const w = new WebWorker(worker);
+        const cw = new WebWorker(cWorker);
+        const hw = new WebWorker(hWorker);
         // event listener for receiving messages from the worker
-        w.addEventListener('message', (event) => {
-            // here we receive the chunks of the image 
-            // and then here itself we upload each one of them to the gun js database
-            setChunks(event.data);
-            
-            // !!-- here enters the code that will upload the file to the gun js database
-        });
+        cw.addEventListener('message', chunkWorkerHandler);
+        hw.addEventListener('message', hashWorkerHandler);
         // save the worker instance to a state
-        setChunkWorker(w);
+        setChunkWorker(cw);
+        setHashWorker(hw);
         return () => {
             // terminate the worker as a clean up function
-            w.terminate();
+            setChunkWorker(null);
+            setHashWorker(null);
+            cw.terminate();
+            hw.terminate();
         }
     }, []);
 
@@ -85,7 +87,9 @@ export default function Create({ gun, user, sessionStorage }) {
             // read again as an array buffer for the hashing
             // !!-- hasing is done here itself
             arrayBufferReader.onloadend = async () => {
-                // we then hash this array buffer now                
+                // we then hash this array buffer now    
+                // Use the Web Crypto API to hash the images here      
+                // for hashing we need the array buffer of the data to be hashed
                 const imgArrayBuffer = arrayBufferReader.result;
                 const hashBuffer = await crypto.subtle.digest('SHA-256', imgArrayBuffer);
                 const hashArray = Array.from(new Uint8Array(hashBuffer));
@@ -109,6 +113,78 @@ export default function Create({ gun, user, sessionStorage }) {
         else {
             console.error('No image selected for uploading.');
         }
+    }
+
+    // event handler for the chunk worker brought down here to make the code cleaner
+    async function chunkWorkerHandler(e) {
+        // here we receive the chunks of the image 
+        // and then here itself we upload each one of them to the gun js database
+        // !!-- we'll be removing this after we are completed with the upload
+
+        // in the actual program, the image will not immediately be stored onto the frozen chain
+        // we first store it in our centralized server first... and after observing for the quality of the content from the community
+        // we decide whether or not to convert it into an actual NFT
+
+        // !!-- thus the head of the node will have the hash as its name
+
+        // !!-- initially this is how we planned to host to the frozen space
+        // const lengthHash = await SEA.work(String(event.data.length), null, null, { name: "SHA-256" });
+        // the first property is the length hash            
+        // gut.get('posts').get(imgHash).get('length').get('#').put(lengthHash);
+        // for (i = 0; i < event.data.length; i++) {
+        //     // need to store it as an array otherwise it wont work
+        //     // finally upload the chunken image data to the gun js database
+        //     gun.get('posts').get(imgHash).get('data').set()                    
+        //     .get('d' + i).get('#').get(event.data[i].hash).put(event.data[i].data, function (ack) {
+        //         if (ack.err) console.error('Error uploading chunk ' + i + ' to frozen gun space: ' + ack.err);
+        //     });
+        // }
+        setChunks(e.data);
+
+        // !!-- after the chunk handler receives all the substrings in an array it sends to the worker for hashing the keys
+
+        // first we set the length property to the database
+        user.get('posts').get(imgHash).get('length').set(String(e.data.length)).on(async (data, key) => {
+            const lenHash = await SEA.work(key, null, null, { name: "SHA-256" });
+            gun.get('#posts').get(imgHash).get(user.is.pub + '#' + lenHash).put(key, function (ack) {
+                if (ack.err) {
+                    console.error('Error uploading chunks length:', ack.err);
+                }
+                else console.log('Uploaded length of chunks to frozen space.');
+            })
+        });
+
+        // we create the post and keep sending the key of the new posts to the workers
+        for (let i = 0; i < e.data.length; i++) {
+            user.get('messages').get(imgHash).get('data').set(e.data[i]).on(async (data, key) => {
+                // send the key here along with the index
+                hashWorker.postMessage({
+                    key: key,
+                    index: i
+                });
+                // push the key the state
+                setChunkKeys([...chunkKeys, key]);
+            });
+        }
+        // inform the worker that we have sent all the data and time to send it back
+        hashWorker.postMessage({
+            end: true
+        })
+    }
+
+    function hashWorkerHandler(e) {
+        // the storing and sorting will happen in the worker itself                
+        const hashArray = e.data;
+        hashArray.forEach(hash, index => {
+            gun.get('#posts').get(imgHash).get('data').get('d' + index)
+                .get(user.is.pub + '#' + hash).put(chunkKeys[index], function(ack) {
+                    if (ack.err) {
+                        console.error(`Error uploading chunk ${index} to frozen space: ${ack.err}`);
+                    }
+                })
+        });
+        // after we are done uploading we do not need the node key anymore
+        setChunkKeys([]);
     }
 
     return (

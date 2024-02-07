@@ -6,7 +6,8 @@ import { useNavigate } from 'react-router-dom';
 
 export default function Logout({ user, sessionStorage }) {
     const navigate = useNavigate();
-
+    // if any logout logic is to be implemented then it needs to be here
+    // the gun.on('bye) listener does not work
     function handleLogout() {
         let is = user.is;
         is ? console.log('User to log out: ', is.alias) : console.log('No user to log out.');

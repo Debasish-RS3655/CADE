@@ -19,7 +19,7 @@ export default function Profile({ gun, user, pair }) {
 
     // run only during the first render
     useEffect(() => {
-        const userProfile = gun.get('~' + user.is.pub).get('profile')
+        const userProfile = gun.get('~' + user.is.pub).get('profile');
         userProfile.get('name').on(async nameSig => {
             const decryptedName = await decrypt(nameSig, pair);
             console.log('decrypted name: ', decryptedName);

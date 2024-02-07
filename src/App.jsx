@@ -54,15 +54,7 @@ function App() {
     //   if (no) return no;
     //   this.to.next('at');
     // });
-
-    gun.on('bye', () => {
-      // reset the user and route back to the auth page
-      sessionStorage.clear();
-      // don't think it is necessary to reroute back to the auth page because this will happen automatically
-      // navigate('/auth');
-      console.log('user logged out');
-    })
-
+    
     return () => {
       gun.off();
     }

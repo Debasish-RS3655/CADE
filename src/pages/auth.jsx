@@ -3,6 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { encrypt } from '../lib/crypt';
 import config from '../config';
 
+// session storage contains the following fields
+// user.alias
+// user.tmp
+// user.pub
+
 const Auth = ({ gun, user, sessionStorage }) => {
     const navigate = useNavigate();
     const [username, setUsername] = useState('');
@@ -107,7 +112,8 @@ const Auth = ({ gun, user, sessionStorage }) => {
                 }
                 if (ack.pub) {
                     // maintain the username and the public key in the gun js database
-                    gun.get('users').get(username).put(gun.get('~@' + username));
+                    // !!-- this part of the code is not necessary
+                    // gun.get('users').get(username).put(gun.get('~@' + username));
                     console.log('Created new user:', ack.pub);
                     // the ack object contains only the public key and an ok variable
                     setNotfication({ message: '', type: '' });
