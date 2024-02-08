@@ -3,8 +3,9 @@ import Navbar from '../components/Navbar';
 import { useNavigate } from 'react-router-dom';
 import "../styles/feed.css";
 
-export default function Feed({ gun, user, sessionStorage }) {
+export default function Feed({ gun, user }) {
     const navigate = useNavigate();
+    // this needs to run on every render
     useEffect(() => {
         if (!user.is) {
             navigate('/auth');
@@ -17,9 +18,9 @@ export default function Feed({ gun, user, sessionStorage }) {
     // argument will be given as value, key
     function postHandler(node, hash) {
         node.get('length').once(val => {
-            const length = val;            
+            const length = val;
             // need to send this to the merger now
-            for (let i = 0; i < length; i++) {            
+            for (let i = 0; i < length; i++) {
                 node.get('data').get('d' + i)
             }
         });
@@ -28,7 +29,7 @@ export default function Feed({ gun, user, sessionStorage }) {
     return (
         <>
             <Navbar />
-            {sessionStorage.getItem('user.alias') && <h1>Feed of {sessionStorage.getItem('user.alias')}</h1>}
+            {user.is.alias && <h1>Feed of {user.is.alias}</h1>}
             <div className='feed-gallery'>
                 <div className='images'>
                     {posts.map((image, index) => (

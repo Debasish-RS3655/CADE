@@ -1,10 +1,20 @@
 // Debashish Buragohain
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 // need to decrypt the info that we encrypted during authentication
 import { decrypt, encrypt } from '../lib/crypt';
 
 export default function Profile({ gun, user, pair }) {
+    // just an additional check for this.. won't become true in general imaginable conditions
+    const navigate = useNavigate();
+    useEffect(() => {
+        if (!user.is) {
+            console.log('user not logged in.. redirecting back to authentication page.');
+            navigate('/auth');
+        }
+    }, []);
+
     const alias = user.is.alias;
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -20,7 +30,7 @@ export default function Profile({ gun, user, pair }) {
     // run only during the first render
     useEffect(() => {
         const userProfile = gun.get('~' + user.is.pub).get('profile');
-        userProfile.get('name').on(async nameSig => {
+        userProfile.get('name').once(async nameSig => {
             const decryptedName = await decrypt(nameSig, pair);
             console.log('decrypted name: ', decryptedName);
             setName(decryptedName);
@@ -30,7 +40,7 @@ export default function Profile({ gun, user, pair }) {
             console.log('decrypted email: ', decryptedEmail);
             setEmail(decryptedEmail);
         });
-        userProfile.get('bio').on(async bioSig => {
+        userProfile.get('bio').once(async bioSig => {
             const decryptedBio = await decrypt(bioSig, pair);
             console.log('decrypted bio: ', decryptedBio);
             setBio(decryptedBio);
@@ -51,7 +61,7 @@ export default function Profile({ gun, user, pair }) {
     }
 
     const clearBio = () => {
-        setBio('');        
+        setBio('');
     }
 
     return (

@@ -33,6 +33,7 @@ function App() {
       console.log('Logged in:', sessionStorage.getItem('user.alias'));
       // store the key pairs after a successful authentication
       setPairs(at.sea);
+      console.log('User logged in: ', user.is.pub);
     })
 
     // gun.on('secure', (at) => {
@@ -54,7 +55,7 @@ function App() {
     //   if (no) return no;
     //   this.to.next('at');
     // });
-    
+
     return () => {
       gun.off();
     }
@@ -69,10 +70,12 @@ function App() {
           {/* we pass the gun and user instances directly as a parameter */}
           <Route path='/' element={<Home user={user} />}></Route>
           <Route path='/auth' element={<Auth gun={gun} user={user} sessionStorage={sessionStorage} />}></Route>
-          <Route path='/feed' element={<Feed gun={gun} user={user} sessionStorage={sessionStorage} />}></Route>
-          <Route path='/create' element={<Create gun={gun} user={user} sessionStorage={sessionStorage} SEA={Gun.SEA}/>}></Route >
           {userPairs &&
-            (<Route path='/profile' element={<Profile gun={gun} user={user} pair={userPairs}></Profile>}></Route>)}
+            (<>
+              <Route path='/profile' element={<Profile gun={gun} user={user} pair={userPairs}></Profile>}></Route>
+              <Route path='/feed' element={<Feed gun={gun} user={user} />}></Route>
+              <Route path='/create' element={<Create gun={gun} user={user} SEA={Gun.SEA} />}></Route >
+            </>)}
           {/* catch any unknown routes and route them back to the auth page */}
           <Route path='*' element={<Navigate to="/auth" replace></Navigate>}></Route>
         </Routes>
