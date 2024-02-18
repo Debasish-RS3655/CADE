@@ -44,8 +44,8 @@ export default () => {
 
         // hash all the functions and return them once only
         if (!e) { return }
-
-        const { chunks } = e.data;
+        // also need the worker number for the organized indexing of the hashes from multiple workers
+        const { chunks, worker } = e.data;
         const hashedArray = [];
         for (let i = 0; i < chunks.length; i++) {
             const textBuffer = new TextEncoder().encode(chunks[i]);
@@ -54,6 +54,6 @@ export default () => {
             const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
             hashedArray[i] = hashHex;
         }
-        postMessage({ hashedArray });
+        postMessage({ hashedArray, worker });
     });
 }

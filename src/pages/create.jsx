@@ -23,7 +23,17 @@ export default function Create({ gun, user, SEA }) {
     const [chunkWorker, setChunkWorker] = useState(null);
     const [hashWorker, setHashWorker] = useState(null);
     const [hashWorker2, setHashWorker2] = useState(null);
+    // the chunk array and the hashed chunk array
     const [imgChunk, setChunks] = useState([]);
+    const [imgHashArray, setImgHashArray] = useState([]);
+    const [imgHashArray1, setImgHashArray1] = useState([]);
+    const [imgHashArray2, setImgHashArray2] = useState([]);
+    // selectedImg is stored in base64 encoded form
+    const [selectedImg, setSelectedImg] = useState('');
+    const [imgSize, setImgSize] = useState(null);
+    // we create the hash of the image now
+    const [imgHash, setImgHash] = useState(null);
+
     // const [chunkKeys, setChunkKeys] = useState([]);
 
     // initialize the web worker at the initial rendering of the page
@@ -32,9 +42,10 @@ export default function Create({ gun, user, SEA }) {
         const hw = new WebWorker(hWorker);
         const hw2 = new WebWorker(hWorker);
         // event listener for receiving messages from the worker
+        // two wokers for the hashing function
         cw.addEventListener('message', chunkWorkerHandler);
-        hw.addEventListener('message', hashWorker1Handler);
-        hw2.addEventListener('message', hashWorker2Handler);
+        hw.addEventListener('message', hashWorkerHandler);
+        hw2.addEventListener('message', hashWorkerHandler);
         // save the worker instance to a state
         setChunkWorker(cw);
         setHashWorker(hw);
@@ -49,12 +60,6 @@ export default function Create({ gun, user, SEA }) {
             hw2.terminate();
         }
     }, []);
-
-    // selectedImg is stored in base64 encoded form
-    const [selectedImg, setSelectedImg] = useState('');
-    const [imgSize, setImgSize] = useState(null);
-    // we create the hash of the image now
-    const [imgHash, setImgHash] = useState(null);
 
     // we hash the image as soon as it is uploaded
     // and do not wait for the submit button to be pressed
@@ -159,7 +164,6 @@ export default function Create({ gun, user, SEA }) {
         //     })
         // });
 
-
         // // we create the post and keep sending the key of the new posts to the workers
         // for (let i = 0; i < e.data.length; i++) {
         //     user.get('posts').get(imgHash).get('data').set(e.data[i]).on(async (data, key) => {
@@ -196,51 +200,63 @@ export default function Create({ gun, user, SEA }) {
     useEffect(() => {
         // wait for the hash worker to be actually loaded and not changed values due to renders
         if (hashWorker !== null && hashWorker2 !== null) {
+            // before sending this clear the hash array of the previous operations
+            setImgHashArray([]);
             // divide the image into equal parts now
             let mid = imgChunk.length / 2;
             hashWorker.postMessage({
+                worker: 1,      // also need to send the worker number for the organized working
                 chunks: imgChunk.slice(0, mid)
             })
             hashWorker2.postMessage({
+                worker: 2,
                 chunks: imgChunk.slice(mid, imgChunk.length)
             })
         }
     }, [imgChunk]);
 
-    function hashWorker1Handler(e) {
-        // !!-- not included in the latest version of the program
-        // const hashArray = e.data;
-        // hashArray.forEach(hash, index => {
-        //     gun.get('#posts').get(imgHash).get('data').get('d' + index)
-        //         .get(user.is.pub + '#' + hash).put(chunkKeys[index], function (ack) {
-        //             if (ack.err) {
-        //                 console.error(`Error uploading chunk ${index} to frozen space: ${ack.err}`);
-        //             }
-        //         })
-        // });
-        // after we are done uploading we do not need the node key anymore
-        // setChunkKeys([]);      
-        // now here we upload all the chunks to the gun js database
-        const { hashedArray } = e.data;
-        console.log(hashedArray);
-        // hashedArray.forEach(async (hash, index) => {
-        //     const postNode = gun.get('#' + imgHash);
-        //     const chunkNode = postNode.get(`c${index}#${hash}`);
-        //     try {
-        //         await putHandler(chunkNode, imgHash[index]);
-        //         if (index == hashedArray.length - 1) {
-        //             console.log("Uploaded entire image.");
-        //         }
-        //     }
-        //     catch (err) {
-        //         return console.error(err);
-        //     }
-        // });
+    // even the workers responded variable needs to be a state inside react
+    // all the hash workers this one listener only
+    function hashWorkerHandler(e) {
+        const { hashedArray, worker } = e.data;
+        // the worker number
+        switch (worker) {
+            case 1:
+                console.log("For worker 1 hashed array:", hashedArray);
+                setImgHashArray1(hashedArray);
+                break;
+            case 2:
+                console.log("For worker 2 hashed array:", hashedArray);
+                setImgHashArray2(hashedArray);
+                break;
+        }
     }
-    function hashWorker2Handler(e) {
-        const { hashedArray } = e.data;
-        console.log(hashedArray);
-    }
+
+    // the upload part is handled inside an use effect when all the hashes are received
+    useEffect(() => {
+        if (imgHashArray1.length + imgHashArray2.length == imgChunk.length && imgHashArray1.length !== 0) {
+            const hashedArray = imgHashArray1.concat(imgHashArray2);
+            setImgHashArray1([]);               // no need to maintain in the states once we have the complete array
+            setImgHashArray2([]);
+            console.log("Complete hash array:", hashedArray);
+
+            // !!--- continue the work from here Rahul
+
+            // hashedArray.forEach(async (hash, index) => {
+            //     const postNode = gun.get('#' + imgHash);
+            //     const chunkNode = postNode.get(`c${index}#${hash}`);
+            //     try {
+            //         await putHandler(chunkNode, imgHash[index]);
+            //         if (index == hashedArray.length - 1) {
+            //             console.log("Uploaded entire image.");
+            //         }
+            //     }
+            //     catch (err) {
+            //         return console.error(err);
+            //     }
+            // });   
+        }
+    }, [imgHashArray1, imgHashArray2]);
 
     return (
         <>
