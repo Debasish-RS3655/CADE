@@ -147,7 +147,7 @@ const Auth = ({ gun, user, sessionStorage }) => {
     return (
         <div>
             {notification.message && <div style={{ color: notification.type == 'Error' ? 'red' : 'whitesmoke' }}>{notification.message}</div>}
-            <br />
+            <br /><br/>
             <form onSubmit={handleSubmit}>
                 {isSignUp &&
                     <div>

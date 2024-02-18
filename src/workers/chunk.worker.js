@@ -16,7 +16,7 @@ export default () => {
         const substrLength = Math.ceil(strLength / noDiv);
         const substrings = [];
         // this is a realtively long function that would otherwise hang the UI
-        for (let i = 0; i < substrLength; i++) {
+        for (let i = 0; i < noDiv; i++) {
             const start = i * substrLength;
             const end = start + substrLength;
             const substring = inputString.substring(start, end);
@@ -38,6 +38,7 @@ export default () => {
             substrings.push(substring);
         }
         // finally send the divided chunks back to the frontend
-        postMessage(substrings);
+        if (inputString.length == substrings.join("").length) postMessage(substrings);
+        else console.error("Input and chunked images not of the same length");
     })
 }
