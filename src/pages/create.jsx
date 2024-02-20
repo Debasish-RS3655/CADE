@@ -19,13 +19,14 @@ export default function Create({ gun, user, SEA }) {
         }
     }, []);
 
+
+    const [notice, setNotice] = useState('');
     // initialize and store the chunk worker inside a state hook
     const [chunkWorker, setChunkWorker] = useState(null);
     const [hashWorker, setHashWorker] = useState(null);
     const [hashWorker2, setHashWorker2] = useState(null);
     // the chunk array and the hashed chunk array
     const [imgChunk, setChunks] = useState([]);
-    const [imgHashArray, setImgHashArray] = useState([]);
     const [imgHashArray1, setImgHashArray1] = useState([]);
     const [imgHashArray2, setImgHashArray2] = useState([]);
     // selectedImg is stored in base64 encoded form
@@ -258,6 +259,25 @@ export default function Create({ gun, user, SEA }) {
         }
     }, [imgHashArray1, imgHashArray2]);
 
+
+
+    // totally for presentation purposes only
+    // !! uploads the raw image directly as a set skipping all the chunkers and hashers
+    const handleUncompressedUpload = () => {
+        if (!selectedImg) return console.error("No image selected for uncompressed upload.");
+        gun.get('raw').set({
+            creator: user.is.alias,
+            img: selectedImg
+        }, function (ack) {
+            if (ack.err) return console.error('Error in raw image upload:', ack.err);
+            console.log('RAW image uploaded successfully.');
+            setSelectedImg('');
+            setImgSize(null);
+            setImgHash(null);
+            setNotice("Raw image successfully uploaded.");
+        });
+    }
+
     return (
         <>
             <Navbar />
@@ -276,6 +296,9 @@ export default function Create({ gun, user, SEA }) {
             </label>
             <button onClick={handleUpload} style={{ marginLeft: '10px', padding: '10px 15px', borderRadius: '5px', cursor: 'pointer' }}>
                 Upload Image
+            </button>
+            <button onClick={handleUncompressedUpload} style={{ marginLeft: '10px', padding: '10px 15px', borderRadius: '5px', cursor: 'pointer' }}>
+                Upload Uncompressed
             </button>
             <br />
             {
@@ -302,6 +325,10 @@ export default function Create({ gun, user, SEA }) {
             {
                 imgChunk.length !== 0 &&
                 <div>Divided image into {imgChunk.length} chunks</div>
+            }
+            {
+                notice &&
+                <h2>{notice}</h2>
             }
         </>
     )

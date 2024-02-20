@@ -29,6 +29,10 @@ export default function Profile({ gun, user, pair }) {
 
     // run only during the first render
     useEffect(() => {
+
+        // !!-- this is not how the user space works
+        // !!-- look into this Rahul
+        
         const userProfile = gun.get('~' + user.is.pub).get('profile');
         userProfile.get('name').once(async nameSig => {
             const decryptedName = await decrypt(nameSig, pair);
@@ -58,6 +62,8 @@ export default function Profile({ gun, user, pair }) {
         const encryptedBio = await encrypt(inputBio, pair);
         const userProfile = gun.get('~' + pair.pub).get('profile');
         userProfile.get('bio').put(encryptedBio);
+        // make sure the bio is reflected in the page too
+        setBio(inputBio);
     }
 
     const clearBio = () => {

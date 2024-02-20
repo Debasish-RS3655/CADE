@@ -5,26 +5,20 @@ import "../styles/feed.css";
 
 export default function Feed({ gun, user }) {
     const navigate = useNavigate();
-    // this needs to run on every render
+    const [posts, setPosts] = useState([]);
+
+    // this needs to run as soon as the user is logged in
     useEffect(() => {
         if (!user.is) {
             navigate('/auth');
-            // get the uploaded images in the first render itself
-            gun.get('posts').map().once(postHandler);
         }
-    });
-    const [posts, setPosts] = useState([]);
-
-    // argument will be given as value, key
-    function postHandler(node, hash) {
-        node.get('length').once(val => {
-            const length = val;
-            // need to send this to the merger now
-            for (let i = 0; i < length; i++) {
-                node.get('data').get('d' + i)
-            }
+        // !-- totally experimental 
+        // !-- using the RAW image without chunking and any security operations            
+        // get the uploaded images in the first render itself
+        gun.get('raw').map().once((post) => {
+            setPosts((prevPosts) => [... new Set([...prevPosts, post])]);
         });
-    }
+    }, [user.is]);
 
     return (
         <>
@@ -32,9 +26,10 @@ export default function Feed({ gun, user }) {
             {user.is.alias && <h1>Feed of {user.is.alias}</h1>}
             <div className='feed-gallery'>
                 <div className='images'>
-                    {posts.map((image, index) => (
+                    {posts.map((post, index) => (
                         <div key={index} className='image-box'>
-                            <img src={image.url} alt={`Image ${index}`}></img>
+                            <img src={post.img} alt={`Image ${index}`}></img>
+                            <p>{post.creator}</p>
                         </div>
                     ))}
                 </div>
