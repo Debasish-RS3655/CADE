@@ -13,6 +13,10 @@ only two final things left:
     2.a. get the uploaded image hashes, get the author and the lengths
     2.b. combine all the chunks and return as a single image and display it in the feed page
 
+--- update 
+serial chunked upload working but the combined image hash in the feed page is not matching 
+most probabably due to a wrong insertion order of the base64 image chunks... most probably in the feed page but also could be the create page
+
 !!-- Save bio feature is not working for the newly created workers.. debug it.. maybe some problems with the password storage
 !!-- in profile page, the features are not added into the user space... look into it and if needed do some debugging
 

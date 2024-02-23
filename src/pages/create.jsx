@@ -5,7 +5,7 @@ import config from '../config';
 import cWorker from '../workers/chunk.worker';
 import hWorker from '../workers/hash.worker';
 import WebWorker from '../workers/WebWorker';
-import { putHandler } from '../utility/gunHandlers';
+import { onceHandler, putHandler } from '../utility/gunHandlers';
 
 // for the react native app we use the createHash function of the crypto module
 // for the frontend we use the web crypto api
@@ -182,27 +182,28 @@ export default function Create({ gun, user, SEA }) {
         //     end: true
         // });                
 
+        // upload the length and the creator at this point and leave the remaining after the chunk worker responds
         const postNode = gun.get('#' + imgHash);
         // first set the length of the chunks
         const chunkLength = String(e.data.length);
         const lengthHash = await SEA.work(chunkLength, null, null, { name: "SHA-256" });
         const lengthNode = postNode.get('length#' + lengthHash);
-        await putHandler(lengthNode, chunkLength);
+        await putHandler(lengthNode, chunkLength);        
         // then the author
         const creator = user.is.pub;
         const creatorHash = await SEA.work(creator, null, null, { name: "SHA-256" });
         const creatorNode = postNode.get('creator#' + creatorHash);
         await putHandler(creatorNode, creator);
-
         // then we set the chunks to be sent to the hasher worker
-        setChunks(e.data);
+        setChunks(e.data);        
     }
 
     useEffect(() => {
         // wait for the hash worker to be actually loaded and not changed values due to renders
         if (hashWorker !== null && hashWorker2 !== null) {
             // before sending this clear the hash array of the previous operations
-            setImgHashArray([]);
+            setImgHashArray1([]);
+            setImgHashArray2([]);
             // divide the image into equal parts now
             let mid = imgChunk.length / 2;
             hashWorker.postMessage({
@@ -223,11 +224,9 @@ export default function Create({ gun, user, SEA }) {
         // the worker number
         switch (worker) {
             case 1:
-                console.log("For worker 1 hashed array:", hashedArray);
                 setImgHashArray1(hashedArray);
                 break;
             case 2:
-                console.log("For worker 2 hashed array:", hashedArray);
                 setImgHashArray2(hashedArray);
                 break;
         }
@@ -239,23 +238,30 @@ export default function Create({ gun, user, SEA }) {
             const hashedArray = imgHashArray1.concat(imgHashArray2);
             setImgHashArray1([]);               // no need to maintain in the states once we have the complete array
             setImgHashArray2([]);
-            console.log("Complete hash array:", hashedArray);
-
-            // !!--- continue the work from here Rahul
-
-            // hashedArray.forEach(async (hash, index) => {
-            //     const postNode = gun.get('#' + imgHash);
-            //     const chunkNode = postNode.get(`c${index}#${hash}`);
-            //     try {
-            //         await putHandler(chunkNode, imgHash[index]);
-            //         if (index == hashedArray.length - 1) {
-            //             console.log("Uploaded entire image.");
-            //         }
-            //     }
-            //     catch (err) {
-            //         return console.error(err);
-            //     }
-            // });   
+            console.log("image hash array:", hashedArray);
+            console.log('creation hash: ', imgHash);
+            console.log('creation img array: ', imgChunk);
+            const postNode = gun.get('#' + imgHash);
+            hashedArray.forEach(async (hash, index) => {
+                const chunkNode = postNode.get(`c${index}#${hash}`);
+                try {
+                    await putHandler(chunkNode, imgChunk[index]);
+                    // return immediately after the first execution
+                    if (index == hashedArray.length - 1) {
+                        // confirmation area to the user
+                        const lengthHash = await SEA.work(String(imgChunk.length), null, null, { name: "SHA-256" });
+                        const lengthNode = postNode.get('length#' + lengthHash);
+                        const retrievedLength = await onceHandler(lengthNode);
+                        const creatorHash = await SEA.work(user.is.pub, null, null, { name: "SHA-256" });
+                        const creatorNode = postNode.get('creator#' + creatorHash);
+                        const retrievedCreator = await onceHandler(creatorNode);
+                        console.log("Uploaded entire image with creator: " + retrievedCreator + " and chunks: " + retrievedLength);
+                    }
+                }
+                catch (err) {
+                    return console.error(err);
+                }
+            });
         }
     }, [imgHashArray1, imgHashArray2]);
 

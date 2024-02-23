@@ -25,3 +25,4 @@ dist-ssr
 
 # skip the data directory storing the gun js data
 peer/data
+REMINDER.txt
