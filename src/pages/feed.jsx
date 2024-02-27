@@ -21,8 +21,9 @@ export default function Feed({ gun, user }) {
         //     setPosts((prevPosts) => [... new Set([...prevPosts, post])]);
         // });
 
+        // b5MsN4s0hjunwieXU2TdEUwqXrO1zlQB7NrZjmFuttk=
         (async () => {
-            const searchHash = '677d6287e1647d0b28a76b9b3b983600597505e85b3295e2799e8655686b176f';
+            const searchHash = '47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=';
             const postNode = gun.get('#' + searchHash);
             const lengthNode = postNode.get({ '.': { '*': 'length' } }).map();
             const creatorNode = postNode.get({ '.': { '*': 'creator' } }).map();
@@ -30,16 +31,18 @@ export default function Feed({ gun, user }) {
             const creator = await onceHandler(creatorNode);
             console.log("retrieved chunk length:", chunkLength);
             console.log("retrieved creator: ", creator);
-            let mergedImage = [];
+            let mergedImageArray = [];
             for (let i = 0; i < chunkLength; i++) {
                 let chunkNode = postNode.get({ '.': { '*': `c${i}` } }).map();
                 let chunkData = await onceHandler(chunkNode);
-                mergedImage[i] = chunkData;
+                mergedImageArray[i] = chunkData;
             }
-            mergedImage = mergedImage.join('');
-            const mergedImageHash = await SEA.work(mergedImage, null, null, { name: "SHA-256" });
-            console.log("merged image hash: ", mergedImageHash);
-            console.log("merged image array: ", mergedImage);
+            const mergedb64Img = mergedImageArray.join('');
+            console.log("base64 encoded image: ", mergedb64Img);
+            const mergedImageHash = await SEA.work(mergedb64Img, null, null, { name: "SHA-256" });
+            console.log("merged image hash:", mergedImageHash);
+            // console.log("merged image hash: ", mergedImageHash);
+            // console.log("merged image array: ", mergedImage);
             // console.log("search image hash: ", searchHash);
             // console.log("image verified: ", mergedImageHash == searchHash);
         })();

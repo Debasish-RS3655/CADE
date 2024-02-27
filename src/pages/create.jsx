@@ -19,7 +19,6 @@ export default function Create({ gun, user, SEA }) {
         }
     }, []);
 
-
     const [notice, setNotice] = useState('');
     // initialize and store the chunk worker inside a state hook
     const [chunkWorker, setChunkWorker] = useState(null);
@@ -78,6 +77,7 @@ export default function Create({ gun, user, SEA }) {
             // const hashSum = crypto.createHash('sha256');
             // hashSum.update(imgBuffer);            
             // // update the image hash state
+            // !-- also encode the hash into the base64 format and not in the hex format
             // setImgHash(hashSum.digest('hex'));
 
             const base64Reader = new FileReader();
@@ -96,21 +96,10 @@ export default function Create({ gun, user, SEA }) {
                 setImgSize(sizeBytes);
             }
             base64Reader.readAsDataURL(file);
-            const arrayBufferReader = new FileReader();
-            // read again as an array buffer for the hashing
-            // !!-- hasing is done here itself
-            arrayBufferReader.onloadend = async () => {
-                // we then hash this array buffer now    
-                // Use the Web Crypto API to hash the images here      
-                // for hashing we need the array buffer of the data to be hashed
-                const imgArrayBuffer = arrayBufferReader.result;
-                const hashBuffer = await crypto.subtle.digest('SHA-256', imgArrayBuffer);
-                const hashArray = Array.from(new Uint8Array(hashBuffer));
-                const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-                // update the hash in the state
-                setImgHash(hashHex);
-            }
-            arrayBufferReader.readAsArrayBuffer(file);
+            (async () => {
+                const iHash = await SEA.work(selectedImg, null, null, { name: 'SHA-256' });
+                setImgHash(iHash);
+            })();
         }
     }
 
@@ -130,72 +119,20 @@ export default function Create({ gun, user, SEA }) {
 
     // event handler for the chunk worker brought down here to make the code cleaner
     async function chunkWorkerHandler(e) {
-        // here we receive the chunks of the image 
-        // and then here itself we upload each one of them to the gun js database
-        // !!-- we'll be removing this after we are completed with the upload
-
-        // in the actual program, the image will not immediately be stored onto the frozen chain
-        // we first store it in our centralized server first... and after observing for the quality of the content from the community
-        // we decide whether or not to convert it into an actual NFT
-
-        // !!-- thus the head of the node will have the hash as its name
-
-        // !!-- initially this is how we planned to host to the frozen space
-        // const lengthHash = await SEA.work(String(event.data.length), null, null, { name: "SHA-256" });
-        // the first property is the length hash            
-        // gun.get('posts').get(imgHash).get('length').get('#').put(lengthHash);
-        // for (i = 0; i < event.data.length; i++) {
-        //     // need to store it as an array otherwise it wont work
-        //     // finally upload the chunken image data to the gun js database
-        //     gun.get('posts').get(imgHash).get('data').set()                    
-        //     .get('d' + i).get('#').get(event.data[i].hash).put(event.data[i].data, function (ack) {
-        //         if (ack.err) console.error('Error uploading chunk ' + i + ' to frozen gun space: ' + ack.err);
-        //     });
-        // }
-
-        // !!-- after the chunk handler receives all the substrings in an array it sends to the worker for hashing the keys
-        // !!-- not working currently
-        // user.get('posts').get(imgHash).get('length').set(String(e.data.length)).on(async (data, key) => {
-        //     const lenHash = await SEA.work(key, null, null, { name: "SHA-256" });
-        //     gun.get('#posts').get(imgHash).get(user.is.pub + '#' + lenHash).put(key, function (ack) {
-        //         if (ack.err) {
-        //             console.error('Error uploading chunks length:', ack.err);
-        //         }
-        //         else console.log('Uploaded length of chunks to frozen space.');
-        //     })
-        // });
-
-        // // we create the post and keep sending the key of the new posts to the workers
-        // for (let i = 0; i < e.data.length; i++) {
-        //     user.get('posts').get(imgHash).get('data').set(e.data[i]).on(async (data, key) => {
-        //         // send the key here along with the index
-        //         hashWorker.postMessage({
-        //             key: key,
-        //             index: i
-        //         });
-        //         // push the key the state
-        //         setChunkKeys([...chunkKeys, key]);
-        //     });
-        // }
-        // // inform the worker that we have sent all the data and time to send it back
-        // hashWorker.postMessage({
-        //     end: true
-        // });                
-
         // upload the length and the creator at this point and leave the remaining after the chunk worker responds
         const postNode = gun.get('#' + imgHash);
         // first set the length of the chunks
         const chunkLength = String(e.data.length);
         const lengthHash = await SEA.work(chunkLength, null, null, { name: "SHA-256" });
         const lengthNode = postNode.get('length#' + lengthHash);
-        await putHandler(lengthNode, chunkLength);        
+        await putHandler(lengthNode, chunkLength);
         // then the author
         const creator = user.is.pub;
         const creatorHash = await SEA.work(creator, null, null, { name: "SHA-256" });
         const creatorNode = postNode.get('creator#' + creatorHash);
         await putHandler(creatorNode, creator);
         // then we set the chunks to be sent to the hasher worker
-        setChunks(e.data);        
+        setChunks(e.data);
     }
 
     useEffect(() => {
@@ -249,11 +186,9 @@ export default function Create({ gun, user, SEA }) {
                     // return immediately after the first execution
                     if (index == hashedArray.length - 1) {
                         // confirmation area to the user
-                        const lengthHash = await SEA.work(String(imgChunk.length), null, null, { name: "SHA-256" });
-                        const lengthNode = postNode.get('length#' + lengthHash);
+                        const lengthNode = postNode.get({ '.': { '*': 'length' } }).map();
                         const retrievedLength = await onceHandler(lengthNode);
-                        const creatorHash = await SEA.work(user.is.pub, null, null, { name: "SHA-256" });
-                        const creatorNode = postNode.get('creator#' + creatorHash);
+                        const creatorNode = postNode.get({ '.': { '*': 'creator' } }).map();
                         const retrievedCreator = await onceHandler(creatorNode);
                         console.log("Uploaded entire image with creator: " + retrievedCreator + " and chunks: " + retrievedLength);
                     }

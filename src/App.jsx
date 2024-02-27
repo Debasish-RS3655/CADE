@@ -15,7 +15,6 @@ import Profile from './pages/profile';
 import Logout from './components/logout';
 import Header from './components/Header';
 import config from './config';
-
 function App() {
   const [gun] = useState(Gun({
     peers: [config.defaultPeer]
