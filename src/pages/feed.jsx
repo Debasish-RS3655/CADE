@@ -21,9 +21,10 @@ export default function Feed({ gun, user }) {
         //     setPosts((prevPosts) => [... new Set([...prevPosts, post])]);
         // });
 
-        // b5MsN4s0hjunwieXU2TdEUwqXrO1zlQB7NrZjmFuttk=
         (async () => {
-            const searchHash = '47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=';
+            // krisha image: SQMGguJa3eE/36g+KBLDniqhdy1vsSL7FhedIAc16jI=
+            // screenshot image: q/fqai8SUprB3Ds+2F8zTNYEgTMHyxhy0uCEZlv3lJ8= 
+            const searchHash = 'SQMGguJa3eE/36g+KBLDniqhdy1vsSL7FhedIAc16jI=';
             const postNode = gun.get('#' + searchHash);
             const lengthNode = postNode.get({ '.': { '*': 'length' } }).map();
             const creatorNode = postNode.get({ '.': { '*': 'creator' } }).map();
@@ -39,12 +40,18 @@ export default function Feed({ gun, user }) {
             }
             const mergedb64Img = mergedImageArray.join('');
             console.log("base64 encoded image: ", mergedb64Img);
-            const mergedImageHash = await SEA.work(mergedb64Img, null, null, { name: "SHA-256" });
-            console.log("merged image hash:", mergedImageHash);
-            // console.log("merged image hash: ", mergedImageHash);
-            // console.log("merged image array: ", mergedImage);
-            // console.log("search image hash: ", searchHash);
-            // console.log("image verified: ", mergedImageHash == searchHash);
+            const mergedImageHash = await SEA.work(mergedb64Img, null, null, { name: "SHA-256" });            
+            console.log("merged image hash: ", mergedImageHash);
+            console.log("merged image array: ", mergedb64Img);
+            console.log("search image hash: ", searchHash);
+            if (mergedImageHash == searchHash) {
+                console.log("Image hash verified.");
+                // set the post to be displayed to the feed page now
+                setPosts([{
+                    img: mergedb64Img,
+                    creator: creator
+                }])                
+            }
         })();
 
     }, [user.is]);

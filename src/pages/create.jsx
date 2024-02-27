@@ -6,15 +6,15 @@ import cWorker from '../workers/chunk.worker';
 import hWorker from '../workers/hash.worker';
 import WebWorker from '../workers/WebWorker';
 import { onceHandler, putHandler } from '../utility/gunHandlers';
-
 // for the react native app we use the createHash function of the crypto module
 // for the frontend we use the web crypto api
 // import { createHash } from 'crypto';
+
 export default function Create({ gun, user, SEA }) {
     const navigate = useNavigate();
     useEffect(() => {
         if (!user.is) {
-            console.log('user not logged in.. redirected back to authentication page.');
+            console.log('user not logged in.. redirecting back to authentication page.');
             navigate('/auth');
         }
     }, []);
@@ -82,7 +82,7 @@ export default function Create({ gun, user, SEA }) {
 
             const base64Reader = new FileReader();
             // first read as data URL for the base64 encoding
-            base64Reader.onload = () => {
+            base64Reader.onload = async () => {
                 // we set the base64 encoded image as the URL for displaying in the UI
                 setSelectedImg(base64Reader.result);
                 // remove the data:image/*;base64, prefix
@@ -94,12 +94,13 @@ export default function Create({ gun, user, SEA }) {
                 const sizeBytes = binaryImg.length;
                 // save to state for displaying the image size into the UI                
                 setImgSize(sizeBytes);
+                // need to calculate the hash inside this block itself
+                const iHash = await SEA.work(base64Reader.result, null, null, { name: 'SHA-256' });
+                console.log("selected image: ", base64Reader.result);
+                console.log("selected image hash: ", iHash);
+                setImgHash(iHash);
             }
             base64Reader.readAsDataURL(file);
-            (async () => {
-                const iHash = await SEA.work(selectedImg, null, null, { name: 'SHA-256' });
-                setImgHash(iHash);
-            })();
         }
     }
 
@@ -122,15 +123,24 @@ export default function Create({ gun, user, SEA }) {
         // upload the length and the creator at this point and leave the remaining after the chunk worker responds
         const postNode = gun.get('#' + imgHash);
         // first set the length of the chunks
+
+        //!! -- some problem with the chunk length part
         const chunkLength = String(e.data.length);
-        const lengthHash = await SEA.work(chunkLength, null, null, { name: "SHA-256" });
+        console.log("chunk length: ", chunkLength);        
+        const lengthHash = await SEA.work(chunkLength, null, null, { name: "SHA-256" });                
         const lengthNode = postNode.get('length#' + lengthHash);
         await putHandler(lengthNode, chunkLength);
+        const searchLengthNode = postNode.get({ '.': { '*': 'length' } }).map();
+        const searchedLength = await onceHandler(searchLengthNode);
+        console.log('uploaded chunk length: ', searchedLength);
         // then the author
         const creator = user.is.pub;
         const creatorHash = await SEA.work(creator, null, null, { name: "SHA-256" });
         const creatorNode = postNode.get('creator#' + creatorHash);
         await putHandler(creatorNode, creator);
+        const searchCreatorNode = postNode.get({ '.': { '*': 'creator' } }).map();
+        const searchedCreator = await onceHandler(searchCreatorNode);
+        console.log("uploaded creator: ", searchedCreator);
         // then we set the chunks to be sent to the hasher worker
         setChunks(e.data);
     }
@@ -183,6 +193,7 @@ export default function Create({ gun, user, SEA }) {
                 const chunkNode = postNode.get(`c${index}#${hash}`);
                 try {
                     await putHandler(chunkNode, imgChunk[index]);
+                    console.log("uploaded chunk: ", index);
                     // return immediately after the first execution
                     if (index == hashedArray.length - 1) {
                         // confirmation area to the user
@@ -199,7 +210,6 @@ export default function Create({ gun, user, SEA }) {
             });
         }
     }, [imgHashArray1, imgHashArray2]);
-
 
 
     // totally for presentation purposes only
