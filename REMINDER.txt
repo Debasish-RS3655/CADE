@@ -7,16 +7,13 @@ also converted the gun get and put methods into promises from callbacks and put 
 the gun upload and getting reference is available in the final folder within the blog folder in the gun js folder.
 we already uploaded the length and the author of the image in gun js
 
+
 only two final things left: 
-1. serial upload of all the chunks into the respective hases.
-2. in the feed page, display the uploaded images:
+!!-- first check the working for a single post... hashing function is corrected
+1. in the feed page, display the uploaded images:
     2.a. get the uploaded image hashes, get the author and the lengths
     2.b. combine all the chunks and return as a single image and display it in the feed page
 
---- update 
-image being returned correctly but the hashes are different each
-
-!!-- Save bio feature is not working for the newly created workers.. debug it.. maybe some problems with the password storage
 !!-- in profile page, the features are not added into the user space... look into it and if needed do some debugging
 
 --> Debashish Buragohain -- 18/02/2024
