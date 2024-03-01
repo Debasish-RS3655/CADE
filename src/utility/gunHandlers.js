@@ -2,7 +2,9 @@
 // Debashish Buragohain
 
 const onceHandler = (node) => new Promise((resolve, reject) => {
-    node.once(data => {
+    node.once((data, key) => {
+        // console.log("node once return data:", data);
+        // console.log("node once return key:", key);
         node.off();     // remove the once hander after receiving in once
         resolve(data);
     });
@@ -10,8 +12,13 @@ const onceHandler = (node) => new Promise((resolve, reject) => {
 
 const putHandler = (node, data) => new Promise((resolve, reject) => {
     node.put(data, (ack) => {
+        // console.log("put given node: ", node);
+        // console.log("put return data: ", data);
         if (ack.err) reject(ack.err);
-        else resolve(ack.ok);
+        else {
+            node.off();
+            resolve(ack.ok);
+        }
     })
 });
 

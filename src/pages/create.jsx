@@ -96,7 +96,6 @@ export default function Create({ gun, user, SEA }) {
                 setImgSize(sizeBytes);
                 // need to calculate the hash inside this block itself
                 const iHash = await SEA.work(base64Reader.result, null, null, { name: 'SHA-256' });
-                console.log("selected image: ", base64Reader.result);
                 console.log("selected image hash: ", iHash);
                 setImgHash(iHash);
             }
@@ -120,27 +119,6 @@ export default function Create({ gun, user, SEA }) {
 
     // event handler for the chunk worker brought down here to make the code cleaner
     async function chunkWorkerHandler(e) {
-        // upload the length and the creator at this point and leave the remaining after the chunk worker responds
-        const postNode = gun.get('#' + imgHash);
-        // first set the length of the chunks
-
-        //!! -- some problem with the chunk length part
-        const chunkLength = String(e.data.length);
-        console.log("chunk length: ", chunkLength);        
-        const lengthHash = await SEA.work(chunkLength, null, null, { name: "SHA-256" });                
-        const lengthNode = postNode.get('length#' + lengthHash);
-        await putHandler(lengthNode, chunkLength);
-        const searchLengthNode = postNode.get({ '.': { '*': 'length' } }).map();
-        const searchedLength = await onceHandler(searchLengthNode);
-        console.log('uploaded chunk length: ', searchedLength);
-        // then the author
-        const creator = user.is.pub;
-        const creatorHash = await SEA.work(creator, null, null, { name: "SHA-256" });
-        const creatorNode = postNode.get('creator#' + creatorHash);
-        await putHandler(creatorNode, creator);
-        const searchCreatorNode = postNode.get({ '.': { '*': 'creator' } }).map();
-        const searchedCreator = await onceHandler(searchCreatorNode);
-        console.log("uploaded creator: ", searchedCreator);
         // then we set the chunks to be sent to the hasher worker
         setChunks(e.data);
     }
@@ -185,27 +163,45 @@ export default function Create({ gun, user, SEA }) {
             const hashedArray = imgHashArray1.concat(imgHashArray2);
             setImgHashArray1([]);               // no need to maintain in the states once we have the complete array
             setImgHashArray2([]);
-            console.log("image hash array:", hashedArray);
-            console.log('creation hash: ', imgHash);
-            console.log('creation img array: ', imgChunk);
             const postNode = gun.get('#' + imgHash);
             hashedArray.forEach(async (hash, index) => {
                 const chunkNode = postNode.get(`c${index}#${hash}`);
                 try {
                     await putHandler(chunkNode, imgChunk[index]);
                     console.log("uploaded chunk: ", index);
-                    // return immediately after the first execution
+                    // atlast upload the creator and the chunk length
                     if (index == hashedArray.length - 1) {
-                        // confirmation area to the user
-                        const lengthNode = postNode.get({ '.': { '*': 'length' } }).map();
-                        const retrievedLength = await onceHandler(lengthNode);
-                        const creatorNode = postNode.get({ '.': { '*': 'creator' } }).map();
-                        const retrievedCreator = await onceHandler(creatorNode);
-                        console.log("Uploaded entire image with creator: " + retrievedCreator + " and chunks: " + retrievedLength);
+                        const chunkLength = String(imgChunk.length);
+                        console.log("chunk length: ", chunkLength);
+                        const lengthHash = await SEA.work(chunkLength, null, null, { name: "SHA-256" });
+                        const lengthNode = postNode.get('clength#' + lengthHash);
+                        await putHandler(lengthNode, chunkLength);
+                        // verifying the uploaded length
+                        const searchLengthNode = postNode.get({ '.': { '*': 'clength' } }).map();
+                        const searchedLength = await onceHandler(searchLengthNode);
+                        console.log('uploaded chunk length: ', searchedLength);
+                        // const creator = user.is.pub;
+                        // !!-- experimental version, uploading the alias instead of the public key 
+                        const creator = user.is.alias;
+                        const creatorHash = await SEA.work(creator, null, null, { name: "SHA-256" });
+                        const creatorNode = postNode.get('creator#' + creatorHash);
+                        await putHandler(creatorNode, creator);
+                        // verifying the uploaded creator
+                        const searchCreatorNode = postNode.get({ '.': { '*': 'creator' } }).map();
+                        const searchedCreator = await onceHandler(searchCreatorNode);
+                        console.log("uploaded creator: ", searchedCreator);
+                        setNotice(`Uploaded entire image with creator: ${searchedCreator} and chunks: ${searchedLength}`);
                     }
                 }
                 catch (err) {
-                    return console.error(err);
+                    if (err.message.includes(`Failed to execute 'setItem' on 'Storage'`)) {
+                        // this error means that the local storage is full now... clear everything at once
+                        localStorage.clear();
+                        // have to do something about this later... for now lets keep it like this only          
+                        setNotice('Local storage error. Please logout and try again.')
+                    }
+                    else setNotice('Error uploading image.');
+                    return console.error(err.message);
                 }
             });
         }

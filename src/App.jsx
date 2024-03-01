@@ -16,15 +16,18 @@ import Logout from './components/logout';
 import Header from './components/Header';
 import config from './config';
 function App() {
+  // at first remove everything
+  localStorage.clear();
   const [gun] = useState(Gun({
-    peers: [config.defaultPeer]
+    peers: [config.defaultPeer],
+    // defaulting to the radisk storage even in the browser
+    radisk: true
   }));
 
   // user instance from the gun
   const [user] = useState(gun.user());
   // need to store the private keys of the user after authentication for decryption in the other components
   const [userPairs, setPairs] = useState(null);
-
   // event listeners only during the initial render
   useEffect(() => {
     gun.on('auth', (at) => {
