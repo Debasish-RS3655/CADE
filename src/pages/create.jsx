@@ -191,6 +191,10 @@ export default function Create({ gun, user, SEA }) {
                         const searchedCreator = await onceHandler(searchCreatorNode);
                         console.log("uploaded creator: ", searchedCreator);
                         setNotice(`Uploaded entire image with creator: ${searchedCreator} and chunks: ${searchedLength}`);
+                        
+                        // !!-- may not be applied to the actual prgram
+                        // after upload write the hash of the uploaded image as a set to the gun js database so that it is auto fetched from the feed page
+                        gun.get('uploads').set(imgHash);
                     }
                 }
                 catch (err) {

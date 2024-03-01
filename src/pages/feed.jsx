@@ -21,7 +21,12 @@ export default function Feed({ gun, user }) {
         //     setPosts((prevPosts) => [... new Set([...prevPosts, post])]);
         // });
 
-        (async () => {
+        // all the uploaded images are updated and displayed automatically here
+        gun.get('uploads').map().once(searchHash => gunFetch(searchHash));        
+        // gunFetch();
+
+        // devised the gun fetch as a function itself
+        async function gunFetch(searchHash = "MC2evDgzCJKECLOiX8pgt6CJnw0W7wjAGqEA+abs5GE=") {
             // list of successfully uploaded images
             // krisha image: SQMGguJa3eE/36g+KBLDniqhdy1vsSL7FhedIAc16jI=
             // screenshot image: q/fqai8SUprB3Ds+2F8zTNYEgTMHyxhy0uCEZlv3lJ8= 
@@ -35,8 +40,6 @@ export default function Feed({ gun, user }) {
             // vishnu: MC2evDgzCJKECLOiX8pgt6CJnw0W7wjAGqEA+abs5GE=
             // baymax: GM6XaroXLHh8GXEp+i/MT85PBRlIz3etxuS8ksdz+iw=
             try {
-                const searchHash = 'GM6XaroXLHh8GXEp+i/MT85PBRlIz3etxuS8ksdz+iw=';
-                
                 const postNode = gun.get('#' + searchHash);
                 const lengthNode = postNode.get({ '.': { '*': 'clength' } }).map();
                 const creatorNode = postNode.get({ '.': { '*': 'creator' } }).map();
@@ -55,17 +58,21 @@ export default function Feed({ gun, user }) {
                 if (mergedImageHash == searchHash) {
                     console.log("Image hash verified.");
                     // set the post to be displayed to the feed page now
-                    setPosts([{
+                    // setPosts([{
+                    //     img: mergedb64Img,
+                    //     creator: creator
+                    // }])
+                    // merge the current post with the posts already being displayed
+                    setPosts((prevPosts) => [... new Set([...prevPosts, {
                         img: mergedb64Img,
                         creator: creator
-                    }])
+                    }])]);
                 }
             }
             catch (err) {
                 console.error("Error retrieving image: ", err.message);
             }
-        })();
-
+        }
     }, [user.is]);
 
     return (
