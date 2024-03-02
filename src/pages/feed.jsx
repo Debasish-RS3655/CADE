@@ -3,7 +3,6 @@ import Navbar from '../components/Navbar';
 import { useNavigate } from 'react-router-dom';
 import "../styles/feed.css";
 import { onceHandler } from '../utility/gunHandlers';
-import { Link } from 'react-router-dom';
 
 export default function Feed({ gun, user }) {
     const navigate = useNavigate();
@@ -66,7 +65,8 @@ export default function Feed({ gun, user }) {
                     // merge the current post with the posts already being displayed
                     setPosts((prevPosts) => [... new Set([...prevPosts, {
                         img: mergedb64Img,
-                        creator: creator
+                        creator: creator,
+                        hash: searchHash    // include the hash inside the post object for further navigation
                     }])]);
                 }
             }
@@ -76,13 +76,17 @@ export default function Feed({ gun, user }) {
         }
     }, [user.is]);
 
+    function postNavigate(postHash) {
+        console.log("lets navigate to " + postHash);
+        navigate('/post/' + postHash)
+    }
     return (
         <>
             <Navbar />
             {user.is.alias && <h1>Feed of {user.is.alias}</h1>}
             <div className='feed-gallery'>
-                {posts.map((post, index) => (                    
-                    <div key={index} className='image-box'>
+                {posts.map((post, index) => (
+                    <div key={index} className='image-box' onClick={() => postNavigate(post.hash)}>
                         <img src={post.img} alt={`Image ${index}`}></img>
                         <p>{post.creator}</p>
                     </div>

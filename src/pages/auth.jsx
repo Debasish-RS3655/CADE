@@ -19,6 +19,13 @@ const Auth = ({ gun, user, sessionStorage }) => {
     const [isSignUp, setIsSignUp] = useState(false);
     const [notification, setNotfication] = useState({ message: '', type: '' });
 
+    useEffect(() => {
+        // if the user is already logged in then directly jump to the feed page
+        if (user.is) {
+            navigate('/feed');
+        }
+    }, [])
+
     // defining the signin function here itself
     const signin = () => {
         // either take the provided login details or directly use the credentials saved in the sessionStorage
@@ -147,7 +154,7 @@ const Auth = ({ gun, user, sessionStorage }) => {
     return (
         <div>
             {notification.message && <div style={{ color: notification.type == 'Error' ? 'red' : 'whitesmoke' }}>{notification.message}</div>}
-            <br /><br/>
+            <br /><br />
             <form onSubmit={handleSubmit}>
                 {isSignUp &&
                     <div>

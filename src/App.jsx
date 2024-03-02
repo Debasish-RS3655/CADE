@@ -11,6 +11,8 @@ import Auth from './pages/auth';
 import Feed from './pages/feed';
 import Create from './pages/create';
 import Home from './pages/home';
+import Post from './pages/post';
+import NotFound from './pages/notFound';
 import Profile from './pages/profile';
 import Logout from './components/logout';
 import Header from './components/Header';
@@ -54,9 +56,10 @@ function App() {
           <Route path='/auth' element={<Auth gun={gun} user={user} sessionStorage={sessionStorage} />}></Route>
           {userPairs &&
             (<>
+              <Route path='/post/*' element={<Post gun={gun} user={user} SEA={Gun.SEA} />}></Route>
               <Route path='/profile' element={<Profile gun={gun} user={user} pair={userPairs}></Profile>}></Route>
               <Route path='/feed' element={<Feed gun={gun} user={user} />}></Route>
-              <Route path='/create' element={<Create gun={gun} user={user} SEA={Gun.SEA} />}></Route >
+              <Route path='/create' element={<Create gun={gun} user={user} SEA={Gun.SEA} />}></Route>
             </>)}
           {/* catch any unknown routes and route them back to the auth page */}
           <Route path='*' element={<Navigate to="/auth" replace></Navigate>}></Route>
