@@ -38,26 +38,6 @@ function App() {
       console.log('User logged in: ', user.is.pub);
     })
 
-    // gun.on('secure', (at) => {
-    //   // enfore some rules about shared level app data
-    //   if (!at.put || !at.put.users) {
-    //     return;
-    //   }
-    //   let no;
-    //   // check if the node exists and verify it
-    //   Gun.node.is(at.put.users, function (val, key) {
-    //     Gun.SEA.verify(val, false, function (val) {
-    //       if ('~@' + key === Gun.val.link.is(val)) {
-    //         return;
-    //       }
-    //       no = true;
-    //     })
-    //     if (no) return no;
-    //   })
-    //   if (no) return no;
-    //   this.to.next('at');
-    // });
-
     return () => {
       gun.off();
     }

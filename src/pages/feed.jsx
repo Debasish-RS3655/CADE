@@ -3,6 +3,7 @@ import Navbar from '../components/Navbar';
 import { useNavigate } from 'react-router-dom';
 import "../styles/feed.css";
 import { onceHandler } from '../utility/gunHandlers';
+import { Link } from 'react-router-dom';
 
 export default function Feed({ gun, user }) {
     const navigate = useNavigate();
@@ -22,7 +23,7 @@ export default function Feed({ gun, user }) {
         // });
 
         // all the uploaded images are updated and displayed automatically here
-        gun.get('uploads').map().once(searchHash => gunFetch(searchHash));        
+        gun.get('uploads').map().once(searchHash => gunFetch(searchHash));
         // gunFetch();
 
         // devised the gun fetch as a function itself
@@ -80,14 +81,12 @@ export default function Feed({ gun, user }) {
             <Navbar />
             {user.is.alias && <h1>Feed of {user.is.alias}</h1>}
             <div className='feed-gallery'>
-                <div className='images'>
-                    {posts.map((post, index) => (
-                        <div key={index} className='image-box'>
-                            <img src={post.img} alt={`Image ${index}`}></img>
-                            <p>{post.creator}</p>
-                        </div>
-                    ))}
-                </div>
+                {posts.map((post, index) => (                    
+                    <div key={index} className='image-box'>
+                        <img src={post.img} alt={`Image ${index}`}></img>
+                        <p>{post.creator}</p>
+                    </div>
+                ))}
             </div>
         </>
     )
