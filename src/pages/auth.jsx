@@ -221,7 +221,7 @@ const Auth = ({ gun, user, sessionStorage }) => {
                     Password:
                     <br />
                     <input
-                        type="password"
+                        type="text"
                         value={password}
                         onChange={handlePasswordChange}
                         required

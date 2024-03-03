@@ -23,7 +23,6 @@ export default function Feed({ gun, user }) {
 
         // all the uploaded images are updated and displayed automatically here
         gun.get('uploads').map().once(searchHash => gunFetch(searchHash));
-        // gunFetch();
 
         // devised the gun fetch as a function itself
         async function gunFetch(searchHash = "MC2evDgzCJKECLOiX8pgt6CJnw0W7wjAGqEA+abs5GE=") {
@@ -85,6 +84,7 @@ export default function Feed({ gun, user }) {
             <Navbar />
             {user.is.alias && <h1>Feed of {user.is.alias}</h1>}
             <div className='feed-gallery'>
+                {posts.length == 0 && <h3>You don't have any items in your feed. Upload to view them here.</h3>}            
                 {posts.map((post, index) => (
                     <div key={index} className='image-box' onClick={() => postNavigate(post.hash)}>
                         <img src={post.img} alt={`Image ${index}`}></img>

@@ -12,16 +12,15 @@ import Feed from './pages/feed';
 import Create from './pages/create';
 import Home from './pages/home';
 import Post from './pages/post';
-import NotFound from './pages/notFound';
 import Profile from './pages/profile';
 import Logout from './components/logout';
 import Header from './components/Header';
 import config from './config';
 function App() {
-  // at first remove everything
   localStorage.clear();
   const [gun] = useState(Gun({
     peers: [config.defaultPeer],
+    // peers: [window.location.origin + '/gun'],
     // defaulting to the radisk storage even in the browser
     radisk: true
   }));
