@@ -17,6 +17,7 @@
     "gun": "github:amark/gun",
     "gun-rebuild": "github:bmatusiak/gun-rebuild",
     "gun-rebuild-sea": "github:bmatusiak/gun-rebuild-sea",
+    "prop-types": "^15.8.1",
     "react": "18.2.0",
     "react-native": "0.73.6",
     "react-native-webview": "^13.6.4",
@@ -24,7 +25,8 @@
     "text-encoding": "^0.7.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0"
+    "@babel/core": "^7.20.0",
+    "@types/gun": "^0.9.6"
   },
   "private": true
 }
