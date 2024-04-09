@@ -1,20 +1,61 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { StatusBar, SafeAreaView, StyleSheet, Text } from 'react-native';
+import WebView from 'react-native-webview';
+import { Constants } from 'expo-constants';
+import htmlProvider from './src/htmlProvider';
 
-export default function App() {
+const MyWebView = () => {
+  const webViewRef = useRef(null);
+  /**
+   * @function handleMessage
+   * @param {String} message
+   * @description this is the message from the react PWA. Need to handle it here
+   */
+
+  const handleMessage = (message = null) => {
+    // provide a switch case statament here handling all the helia events
+    console.log(message?.nativeEvent?.data);
+  }
+  /**
+   * @function sendMsgToPWA
+   * @description send a message from the react native app to the PWA app inside the webview
+   * @description this method will also be fired when the web view loaded successfully - did 
+   * mount first time - onLoad property in <WebView>
+   * 
+   */
+
+  const sendMsgToPWA = () => {
+    if (webViewRef?.current) {
+      webViewRef?.current?.postMessage("Hi to React - from React Native");
+    }
+  }
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
+    <SafeAreaView style={{ flex: 1 }}>
+      <Text>React Native Introduction</Text>
+      <StatusBar />
+      <WebView
+        style={styles.webViewContainer}
+        ref={webViewRef}
+        originWhitelist={['*']}
+        source={{ html: htmlProvider() }}
+        startInLoadingState
+        javaScriptEnabled
+        domStorageEnabled
+        onMessage={handleMessage}
+      />
+    </SafeAreaView>
+  )
 }
+
+export default MyWebView;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: "center",
   },
+  webViewContainer: {
+    flex: 4,    
+  }
 });
