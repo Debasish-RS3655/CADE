@@ -7,6 +7,7 @@ import digitalart from '../assets/digital-art.jpg'
 import { FontAwesome, AntDesign } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import IndividualPost from '../screens/IndividualPost';
+import CommentPage from '../screens/CommentPage';
 import BottomSheet, {BottomSheetScrollView} from '@gorhom/bottom-sheet'; // Import BottomSheet component
 
 const LikeButton = ({ liked, onPress }) => {
@@ -150,13 +151,13 @@ const Feed = () => {
       {/* Bottom sheet placed outside of the list */}
       <BottomSheet
         ref={bottomSheetRef}
-        index={0}
+        index={-1}
         enablePanDownToClose={true}
         snapPoints={['50%','75%', '100%']}
       >
-        <BottomSheetScrollView style={{ height: '100%', backgroundColor: 'white' }}>
-          <Text>Comments</Text>
-          {/* Add your comments component here */}
+        <BottomSheetScrollView style={{ height: '100%', backgroundColor: 'white' }} showsVerticalScrollIndicator={false}>
+          <CommentPage />
+          
         </BottomSheetScrollView>
       </BottomSheet>
     </View>
