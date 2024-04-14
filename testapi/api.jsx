@@ -8,12 +8,13 @@ import { FontAwesome, AntDesign } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import IndividualPost from '../screens/IndividualPost';
 import CommentPage from '../screens/CommentPage';
+import CommentCard from '../components/CommentCard';
 import BottomSheet, {BottomSheetScrollView} from '@gorhom/bottom-sheet'; // Import BottomSheet component
 
 const LikeButton = ({ liked, onPress }) => {
   return (
     <TouchableOpacity onPress={onPress}>
-      {liked ? <AntDesign name="like1" size={20} color="#BB84E8" /> : <AntDesign name="like2" size={20} color="#BB84E8" />}
+      {liked ? <AntDesign name="like1" size={20} color="#BB84E8" /> : <AntDesign name="like2" size={20} color="black" />}
     </TouchableOpacity>
   );
 };
@@ -51,7 +52,7 @@ const PostItem = React.memo(({ item, openBottomSheet }) => {
           </View>
           <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '16%'}}>
             <TouchableOpacity onPress={openBottomSheet}>
-              <FontAwesome name="comment-o" size={20} color="#BB84E8" />
+              <FontAwesome name="comment-o" size={20} color="black" />
 
             </TouchableOpacity>
           <LikeButton liked={liked} onPress={toggleButton} />
@@ -155,8 +156,9 @@ const Feed = () => {
         enablePanDownToClose={true}
         snapPoints={['50%','75%', '100%']}
       >
-        <BottomSheetScrollView style={{ height: '100%', backgroundColor: 'white' }} showsVerticalScrollIndicator={false}>
-          <CommentPage />
+        <BottomSheetScrollView style={{ height: '100%', backgroundColor: 'white', marginBottom: 45 }} showsVerticalScrollIndicator={false}>
+          <Text style={{fontSize: 16, fontWeight: 'bold', marginBottom: 10}}>Comments</Text>
+          <CommentCard />
           
         </BottomSheetScrollView>
       </BottomSheet>
